@@ -96,6 +96,11 @@ switch ($page) {
         $controller_file = 'modules/sales/sales_controller.php';
         $method_name = $action; // e.g., index, customers, sales_orders
         break;
+    case 'reports':
+        $controller_name = 'ReportsController';
+        $controller_file = 'modules/reports/reports_controller.php';
+        $method_name = $action; // e.g., index, sales_report
+        break;
     default:
         // Handle 404
         header("HTTP/1.0 404 Not Found");
