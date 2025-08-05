@@ -262,4 +262,23 @@ CREATE TABLE `inventory_transactions` (
   FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB;
 
+-- Human Resources (HR) Module (Phase 5)
+CREATE TABLE `employees` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT UNIQUE,
+  `first_name` VARCHAR(100) NOT NULL,
+  `last_name` VARCHAR(100) NOT NULL,
+  `job_title` VARCHAR(255),
+  `department_id` INT,
+  `hire_date` DATE,
+  `phone_number` VARCHAR(50),
+  `address` TEXT,
+  `date_of_birth` DATE,
+  `salary` DECIMAL(15, 2),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`)
+) ENGINE=InnoDB;
+
 -- More tables for other modules will be added in their respective phases.
