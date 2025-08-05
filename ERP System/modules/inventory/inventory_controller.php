@@ -27,6 +27,43 @@ class InventoryController {
         require_once 'modules/inventory/items_view.php';
     }
 
+    public function view_item($id) {
+        $page_title = 'View Item';
+        $item = $this->inventory_model->getItemById($id);
+        if (!$item) {
+            redirect('inventory/items');
+            return;
+        }
+        $transactions = $this->inventory_model->getStockTransactionsForItem($id);
+        require_once 'modules/inventory/view_item_view.php';
+    }
+
+    public function process_stock_adjustment() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $item_id = $_POST['item_id'];
+            $data = [
+                'item_id' => $item_id,
+                'quantity_change' => (int)$_POST['quantity_change'],
+                'notes' => trim($_POST['notes'])
+            ];
+
+            if (empty($data['quantity_change'])) {
+                $_SESSION['error_message'] = 'Quantity change cannot be zero or empty.';
+                redirect('inventory/view_item/' . $item_id);
+                return;
+            }
+
+            if ($this->inventory_model->adjustStock($data)) {
+                $_SESSION['success_message'] = 'Stock adjusted successfully.';
+            } else {
+                $_SESSION['error_message'] = 'Failed to adjust stock.';
+            }
+            redirect('inventory/view_item/' . $item_id);
+        } else {
+            redirect('inventory/items');
+        }
+    }
+
     public function add_item() {
         $page_title = 'Add New Item';
         $categories = $this->inventory_model->getCategories();

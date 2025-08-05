@@ -248,4 +248,18 @@ CREATE TABLE `sales_order_items` (
   FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`id`)
 ) ENGINE=InnoDB;
 
+-- Advanced Inventory (Phase 3)
+CREATE TABLE `inventory_transactions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `item_id` INT NOT NULL,
+  `transaction_type` ENUM('Purchase', 'Sale', 'Adjustment', 'Initial') NOT NULL,
+  `quantity_change` INT NOT NULL,
+  `related_document_id` INT, -- e.g., PO id, SO id
+  `notes` TEXT,
+  `created_by_user_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`id`),
+  FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
 -- More tables for other modules will be added in their respective phases.
