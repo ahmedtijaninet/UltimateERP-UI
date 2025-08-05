@@ -192,4 +192,33 @@ CREATE TABLE `payments` (
   FOREIGN KEY (`received_by_user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB;
 
+-- Purchasing Module (Phase 2)
+CREATE TABLE `purchase_orders` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `po_number` VARCHAR(100) NOT NULL UNIQUE,
+  `supplier_id` INT NOT NULL,
+  `order_date` DATE NOT NULL,
+  `expected_delivery_date` DATE,
+  `total_amount` DECIMAL(15, 2) NOT NULL,
+  `status` ENUM('Draft', 'Ordered', 'Partially Received', 'Fully Received', 'Cancelled') NOT NULL DEFAULT 'Draft',
+  `created_by_user_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`),
+  FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `purchase_order_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `po_id` INT NOT NULL,
+  `item_id` INT NOT NULL,
+  `description` TEXT,
+  `quantity` INT NOT NULL,
+  `unit_price` DECIMAL(15, 2) NOT NULL,
+  `total` DECIMAL(15, 2) NOT NULL,
+  `quantity_received` INT DEFAULT 0,
+  FOREIGN KEY (`po_id`) REFERENCES `purchase_orders`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`id`)
+) ENGINE=InnoDB;
+
 -- More tables for other modules will be added in their respective phases.
