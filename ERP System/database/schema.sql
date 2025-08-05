@@ -221,4 +221,31 @@ CREATE TABLE `purchase_order_items` (
   FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`id`)
 ) ENGINE=InnoDB;
 
+-- Sales & CRM Module (Phase 3)
+CREATE TABLE `sales_orders` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `so_number` VARCHAR(100) NOT NULL UNIQUE,
+  `customer_id` INT NOT NULL,
+  `order_date` DATE NOT NULL,
+  `status` ENUM('Draft', 'Confirmed', 'Invoiced', 'Shipped', 'Cancelled') NOT NULL DEFAULT 'Draft',
+  `total_amount` DECIMAL(15, 2) NOT NULL,
+  `created_by_user_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`),
+  FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `sales_order_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `so_id` INT NOT NULL,
+  `item_id` INT NOT NULL,
+  `description` TEXT,
+  `quantity` INT NOT NULL,
+  `unit_price` DECIMAL(15, 2) NOT NULL,
+  `total` DECIMAL(15, 2) NOT NULL,
+  FOREIGN KEY (`so_id`) REFERENCES `sales_orders`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`id`)
+) ENGINE=InnoDB;
+
 -- More tables for other modules will be added in their respective phases.
