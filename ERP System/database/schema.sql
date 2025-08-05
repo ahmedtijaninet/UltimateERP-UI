@@ -149,7 +149,6 @@ CREATE TABLE `customers` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- More tables for Invoices, Sales Orders, Purchase Orders, etc. will be added in later phases.
 -- Enhanced Financial Management (Phase 2)
 CREATE TABLE `invoices` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -281,4 +280,34 @@ CREATE TABLE `employees` (
   FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`)
 ) ENGINE=InnoDB;
 
--- More tables for other modules will be added in their respective phases.
+-- Project Management Module (Phase 5)
+CREATE TABLE `projects` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `customer_id` INT,
+  `start_date` DATE,
+  `end_date` DATE,
+  `budget` DECIMAL(15, 2),
+  `status` ENUM('Not Started', 'In Progress', 'Completed', 'On Hold', 'Cancelled') NOT NULL DEFAULT 'Not Started',
+  `manager_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`),
+  FOREIGN KEY (`manager_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `project_tasks` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `project_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `start_date` DATE,
+  `due_date` DATE,
+  `status` ENUM('To Do', 'In Progress', 'Done', 'Blocked') NOT NULL DEFAULT 'To Do',
+  `assignee_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`assignee_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;

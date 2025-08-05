@@ -106,6 +106,11 @@ switch ($page) {
         $controller_file = 'modules/hr/hr_controller.php';
         $method_name = $action; // e.g., index, employees
         break;
+    case 'projects':
+        $controller_name = 'ProjectsController';
+        $controller_file = 'modules/projects/projects_controller.php';
+        $method_name = $action; // e.g., index, projects
+        break;
     default:
         // Handle 404
         header("HTTP/1.0 404 Not Found");
