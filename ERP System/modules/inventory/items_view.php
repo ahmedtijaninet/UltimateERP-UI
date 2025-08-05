@@ -22,12 +22,13 @@
                 <th>Unit Price</th>
                 <th>Qty on Hand</th>
                 <th>Reorder Level</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($items)): ?>
                 <tr>
-                    <td colspan="7" style="text-align: center;">No items found.</td>
+                    <td colspan="8" style="text-align: center;">No items found.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($items as $item): ?>
@@ -37,8 +38,11 @@
                         <td><?php echo htmlspecialchars($item['category_name']); ?></td>
                         <td><?php echo htmlspecialchars($item['supplier_name']); ?></td>
                         <td>$<?php echo number_format($item['unit_price'], 2); ?></td>
-                        <td><?php echo $item['quantity_on_hand']; ?></td>
+                        <td><strong><?php echo $item['quantity_on_hand']; ?></strong></td>
                         <td><?php echo $item['reorder_level']; ?></td>
+                        <td>
+                            <a href="<?php echo SITE_URL; ?>/inventory/view_item/<?php echo $item['id']; ?>" class="action-link">View</a>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

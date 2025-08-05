@@ -20,6 +20,12 @@ class InventoryModel extends BaseModel {
         return $this->db->resultSet();
     }
 
+    public function getItemById($id) {
+        $this->db->query("SELECT * FROM inventory_items WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
     public function addItem($data) {
         $this->db->query("
             INSERT INTO inventory_items (item_code, description, category_id, unit_price, quantity_on_hand, reorder_level, supplier_id)
@@ -109,6 +115,48 @@ class InventoryModel extends BaseModel {
         // Note: You might want to handle what happens to items from this supplier
         $this->db->query("DELETE FROM suppliers WHERE id = :id");
         $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    // == STOCK METHODS ==
+
+    public function getStockTransactionsForItem($item_id) {
+        $this->db->query("
+            SELECT *
+            FROM inventory_transactions
+            WHERE item_id = :item_id
+            ORDER BY created_at DESC
+        ");
+        $this->db->bind(':item_id', $item_id);
+        return $this->db->resultSet();
+    }
+
+    public function adjustStock($data) {
+        // This should be a transaction
+        // 1. Update the item's quantity
+        $this->db->query("
+            UPDATE inventory_items
+            SET quantity_on_hand = quantity_on_hand + :quantity_change
+            WHERE id = :item_id
+        ");
+        $this->db->bind(':quantity_change', $data['quantity_change']);
+        $this->db->bind(':item_id', $data['item_id']);
+
+        if (!$this->db->execute()) {
+            return false;
+        }
+
+        // 2. Log the transaction
+        $this->db->query("
+            INSERT INTO inventory_transactions (item_id, transaction_type, quantity_change, notes, created_by_user_id)
+            VALUES (:item_id, :transaction_type, :quantity_change, :notes, :created_by_user_id)
+        ");
+        $this->db->bind(':item_id', $data['item_id']);
+        $this->db->bind(':transaction_type', 'Adjustment');
+        $this->db->bind(':quantity_change', $data['quantity_change']);
+        $this->db->bind(':notes', $data['notes']);
+        $this->db->bind(':created_by_user_id', $_SESSION['user_id']);
+
         return $this->db->execute();
     }
 }
