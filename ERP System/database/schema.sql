@@ -1,0 +1,195 @@
+-- ERP System - Database Schema
+-- This schema is based on the comprehensive structure outlined in the README.
+-- It is designed to be modular and scalable.
+
+-- Phase 1: Foundation & Core
+
+-- User Management
+CREATE TABLE `departments` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE `user_roles` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `role_name` VARCHAR(100) NOT NULL UNIQUE,
+  `description` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE `users` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(100) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL UNIQUE,
+  `first_name` VARCHAR(100),
+  `last_name` VARCHAR(100),
+  `role_id` INT,
+  `department_id` INT,
+  `is_active` BOOLEAN DEFAULT true,
+  `last_login` TIMESTAMP NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`role_id`) REFERENCES `user_roles`(`id`),
+  FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `user_sessions` (
+  `id` VARCHAR(255) PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `ip_address` VARCHAR(45),
+  `user_agent` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` TIMESTAMP NOT NULL,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Company Structure
+CREATE TABLE `companies` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `address` TEXT,
+  `phone` VARCHAR(50),
+  `email` VARCHAR(255),
+  `website` VARCHAR(255),
+  `is_default` BOOLEAN DEFAULT false,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE `locations` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `company_id` INT,
+  `name` VARCHAR(255) NOT NULL,
+  `address` TEXT,
+  `is_warehouse` BOOLEAN DEFAULT false,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`)
+) ENGINE=InnoDB;
+
+-- Financial Management (Phase 1)
+CREATE TABLE `accounts` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `account_code` VARCHAR(50) NOT NULL UNIQUE,
+  `account_name` VARCHAR(255) NOT NULL,
+  `account_type` ENUM('Asset', 'Liability', 'Equity', 'Revenue', 'Expense') NOT NULL,
+  `description` TEXT,
+  `is_active` BOOLEAN DEFAULT true,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE `journal_entries` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `entry_date` DATE NOT NULL,
+  `description` TEXT,
+  `created_by_user_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `transactions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `journal_entry_id` INT,
+  `account_id` INT,
+  `debit_amount` DECIMAL(15, 2) DEFAULT 0.00,
+  `credit_amount` DECIMAL(15, 2) DEFAULT 0.00,
+  `description` TEXT,
+  `transaction_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`journal_entry_id`) REFERENCES `journal_entries`(`id`),
+  FOREIGN KEY (`account_id`) REFERENCES `accounts`(`id`)
+) ENGINE=InnoDB;
+
+-- Phase 2: Core Business Operations
+
+-- Purchasing / Procurement
+CREATE TABLE `suppliers` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `contact_person` VARCHAR(255),
+  `email` VARCHAR(255),
+  `phone` VARCHAR(50),
+  `address` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Inventory Management
+CREATE TABLE `item_categories` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `parent_category_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`parent_category_id`) REFERENCES `item_categories`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `inventory_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `item_code` VARCHAR(100) NOT NULL UNIQUE,
+  `description` TEXT,
+  `category_id` INT,
+  `unit_price` DECIMAL(15, 2),
+  `quantity_on_hand` INT DEFAULT 0,
+  `reorder_level` INT,
+  `supplier_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`category_id`) REFERENCES `item_categories`(`id`),
+  FOREIGN KEY (`supplier_id`) REFERENCES `suppliers`(`id`)
+) ENGINE=InnoDB;
+
+-- Sales & CRM
+CREATE TABLE `customers` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `contact_person` VARCHAR(255),
+  `email` VARCHAR(255),
+  `phone` VARCHAR(50),
+  `address` TEXT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- More tables for Invoices, Sales Orders, Purchase Orders, etc. will be added in later phases.
+-- Enhanced Financial Management (Phase 2)
+CREATE TABLE `invoices` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `invoice_number` VARCHAR(100) NOT NULL UNIQUE,
+  `customer_id` INT NOT NULL,
+  `issue_date` DATE NOT NULL,
+  `due_date` DATE NOT NULL,
+  `total_amount` DECIMAL(15, 2) NOT NULL,
+  `paid_amount` DECIMAL(15, 2) DEFAULT 0.00,
+  `status` ENUM('Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled') NOT NULL DEFAULT 'Draft',
+  `created_by_user_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`),
+  FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `invoice_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `invoice_id` INT NOT NULL,
+  `item_id` INT,
+  `description` TEXT NOT NULL,
+  `quantity` INT NOT NULL,
+  `unit_price` DECIMAL(15, 2) NOT NULL,
+  `total` DECIMAL(15, 2) NOT NULL,
+  FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`item_id`) REFERENCES `inventory_items`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `payments` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `invoice_id` INT NOT NULL,
+  `payment_date` DATE NOT NULL,
+  `amount` DECIMAL(15, 2) NOT NULL,
+  `payment_method` VARCHAR(100),
+  `notes` TEXT,
+  `received_by_user_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`invoice_id`) REFERENCES `invoices`(`id`),
+  FOREIGN KEY (`received_by_user_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+-- More tables for other modules will be added in their respective phases.
