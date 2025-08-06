@@ -1,16 +1,15 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Purchase Orders</h1>
-        <a href="<?php echo SITE_URL; ?>/purchasing/create_po" class="btn" style="max-width: 250px;">Create New Purchase Order</a>
+        <?php if ($auth_service->hasPermission('manage_purchasing')): ?>
+            <a href="<?php echo SITE_URL; ?>/purchasing/create_po" class="btn" style="max-width: 250px;">Create New Purchase Order</a>
+        <?php endif; ?>
     </div>
-
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
 
     <table class="table">
         <thead>
@@ -40,6 +39,17 @@
                         <td><span class="status-<?php echo strtolower(str_replace(' ', '-', $po['status'])); ?>"><?php echo htmlspecialchars($po['status']); ?></span></td>
                         <td>
                             <a href="<?php echo SITE_URL; ?>/purchasing/view_po/<?php echo $po['id']; ?>" class="action-link">View</a>
+                            <?php if ($auth_service->hasPermission('manage_purchasing')): ?>
+                                <?php if ($po['status'] == 'Draft'): ?>
+                                    <a href="<?php echo SITE_URL; ?>/purchasing/order_po/<?php echo $po['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to place this order?');">Order</a>
+                                <?php endif; ?>
+                                <?php if ($po['status'] == 'Ordered'): ?>
+                                    <a href="<?php echo SITE_URL; ?>/purchasing/receive_po/<?php echo $po['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to mark this order as received? This will add to inventory.');">Receive</a>
+                                <?php endif; ?>
+                                <?php if ($po['status'] != 'Fully Received' && $po['status'] != 'Cancelled'): ?>
+                                    <a href="<?php echo SITE_URL; ?>/purchasing/cancel_po/<?php echo $po['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to cancel this purchase order?');">Cancel</a>
+                                <?php endif; ?>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

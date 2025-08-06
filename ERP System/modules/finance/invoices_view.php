@@ -1,16 +1,15 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Invoices</h1>
-        <a href="<?php echo SITE_URL; ?>/finance/create_invoice" class="btn" style="max-width: 200px;">Create New Invoice</a>
+        <?php if ($auth_service->hasPermission('manage_finances')): ?>
+            <a href="<?php echo SITE_URL; ?>/finance/create_invoice" class="btn" style="max-width: 200px;">Create New Invoice</a>
+        <?php endif; ?>
     </div>
-
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
 
     <table class="table">
         <thead>
@@ -40,6 +39,9 @@
                         <td><span class="status-<?php echo strtolower($invoice['status']); ?>"><?php echo htmlspecialchars($invoice['status']); ?></span></td>
                         <td>
                             <a href="<?php echo SITE_URL; ?>/finance/view_invoice/<?php echo $invoice['id']; ?>" class="action-link">View</a>
+                            <?php if ($auth_service->hasPermission('manage_finances') && $invoice['status'] != 'Paid' && $invoice['status'] != 'Cancelled'): ?>
+                                <a href="<?php echo SITE_URL; ?>/finance/cancel_invoice/<?php echo $invoice['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to cancel this invoice?');">Cancel</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

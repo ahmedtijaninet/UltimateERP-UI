@@ -1,12 +1,9 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <div class="invoice-box">
         <div class="invoice-header-view">
             <div>
@@ -74,13 +71,9 @@
     </div>
 
     <div class="payment-section">
+        <?php if ($auth_service->hasPermission('manage_finances')): ?>
         <div class="payment-form-container">
             <h3>Record a Payment</h3>
-            <?php if (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger">
-                    <p><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
-                </div>
-            <?php endif; ?>
             <form action="<?php echo SITE_URL; ?>/finance/process_add_payment" method="post">
                 <input type="hidden" name="invoice_id" value="<?php echo $invoice['id']; ?>">
                 <div class="form-group">
@@ -108,6 +101,7 @@
                 <button type="submit" class="btn">Record Payment</button>
             </form>
         </div>
+        <?php endif; ?>
         <div class="payment-history-container">
             <h3>Payment History</h3>
             <table class="table">

@@ -6,12 +6,6 @@
         <a href="<?php echo SITE_URL; ?>/sales/create_so" class="btn" style="max-width: 250px;">Create New Sales Order</a>
     </div>
 
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <table class="table">
         <thead>
             <tr>
@@ -38,6 +32,15 @@
                         <td><span class="status-<?php echo strtolower(str_replace(' ', '-', $so['status'])); ?>"><?php echo htmlspecialchars($so['status']); ?></span></td>
                         <td>
                             <a href="<?php echo SITE_URL; ?>/sales/view_so/<?php echo $so['id']; ?>" class="action-link">View</a>
+                            <?php if ($so['status'] == 'Draft'): ?>
+                                <a href="<?php echo SITE_URL; ?>/sales/confirm_so/<?php echo $so['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to confirm this sales order?');">Confirm</a>
+                            <?php endif; ?>
+                            <?php if ($so['status'] == 'Confirmed'): ?>
+                                <a href="<?php echo SITE_URL; ?>/sales/ship_order/<?php echo $so['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to mark this order as shipped? This will deduct from inventory.');">Ship</a>
+                            <?php endif; ?>
+                            <?php if ($so['status'] != 'Shipped' && $so['status'] != 'Cancelled'): ?>
+                                <a href="<?php echo SITE_URL; ?>/sales/cancel_so/<?php echo $so['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to cancel this sales order?');">Cancel</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -1,16 +1,15 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Chart of Accounts</h1>
-        <a href="<?php echo SITE_URL; ?>/finance/add_account" class="btn" style="max-width: 200px;">Add New Account</a>
+        <?php if ($auth_service->hasPermission('manage_finances')): ?>
+            <a href="<?php echo SITE_URL; ?>/finance/add_account" class="btn" style="max-width: 200px;">Add New Account</a>
+        <?php endif; ?>
     </div>
-
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
 
     <table class="table">
         <thead>
@@ -20,12 +19,13 @@
                 <th>Account Type</th>
                 <th>Description</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($accounts)): ?>
                 <tr>
-                    <td colspan="5" style="text-align: center;">No accounts found.</td>
+                    <td colspan="6" style="text-align: center;">No accounts found.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($accounts as $account): ?>
@@ -38,6 +38,12 @@
                             <span class="status-<?php echo $account['is_active'] ? 'active' : 'inactive'; ?>">
                                 <?php echo $account['is_active'] ? 'Active' : 'Inactive'; ?>
                             </span>
+                        </td>
+                        <td>
+                            <?php if ($auth_service->hasPermission('manage_finances')): ?>
+                                <a href="<?php echo SITE_URL; ?>/finance/edit_account/<?php echo $account['id']; ?>" class="action-link">Edit</a>
+                                <a href="<?php echo SITE_URL; ?>/finance/delete_account/<?php echo $account['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this account?');">Delete</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

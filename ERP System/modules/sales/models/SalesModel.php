@@ -2,15 +2,31 @@
 
 require_once 'includes/BaseModel.php';
 
+require_once 'modules/inventory/models/InventoryModel.php';
+
 class SalesModel extends BaseModel {
+
+    private $inventory_model;
 
     public function __construct() {
         parent::__construct();
+        $this->inventory_model = new InventoryModel();
     }
 
     // == CUSTOMER METHODS ==
-    public function getCustomers() {
-        $this->db->query("SELECT * FROM customers ORDER BY name ASC");
+    public function getCustomers($search = null) {
+        $sql = "SELECT * FROM customers";
+        if ($search) {
+            $sql .= " WHERE name LIKE :search OR email LIKE :search";
+        }
+        $sql .= " ORDER BY name ASC";
+
+        $this->db->query($sql);
+
+        if ($search) {
+            $this->db->bind(':search', '%' . $search . '%');
+        }
+
         return $this->db->resultSet();
     }
 
@@ -76,6 +92,28 @@ class SalesModel extends BaseModel {
         }
 
         return $so;
+    }
+
+    public function cancelSalesOrder($id) {
+        $this->db->query("UPDATE sales_orders SET status = 'Cancelled' WHERE id = :id AND status NOT IN ('Shipped', 'Cancelled')");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function shipSalesOrder($id) {
+        $so = $this->getSalesOrderById($id);
+        if (!$so || $so['status'] != 'Confirmed') {
+            return false;
+        }
+
+        // This should be a transaction
+        foreach ($so['items'] as $item) {
+            $this->inventory_model->adjustStock($item['item_id'], -$item['quantity'], 'Sale', 'SO: ' . $so['so_number'], $id);
+        }
+
+        $this->db->query("UPDATE sales_orders SET status = 'Shipped' WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
     }
 
     public function createSalesOrder($data) {

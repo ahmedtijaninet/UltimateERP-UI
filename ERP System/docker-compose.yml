@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp-app
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USERNAME=erp_user
+      - DB_PASSWORD=erp_password
+      - DB_NAME=erp_system
+
+  db:
+    image: mysql:8.0
+    container_name: erp-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: erp_system
+      MYSQL_USER: erp_user
+      MYSQL_PASSWORD: erp_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

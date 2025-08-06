@@ -1,16 +1,22 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Inventory Items</h1>
-        <a href="<?php echo SITE_URL; ?>/inventory/add_item" class="btn" style="max-width: 200px;">Add New Item</a>
+        <?php if ($auth_service->hasPermission('manage_inventory')): ?>
+            <a href="<?php echo SITE_URL; ?>/inventory/add_item" class="btn" style="max-width: 200px;">Add New Item</a>
+        <?php endif; ?>
     </div>
 
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
+    <div class="search-bar">
+        <form action="<?php echo SITE_URL; ?>/inventory/items" method="get">
+            <input type="text" name="search" placeholder="Search by Item Code or Description..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+            <button type="submit" class="btn">Search</button>
+        </form>
+    </div>
 
     <table class="table">
         <thead>
@@ -42,6 +48,10 @@
                         <td><?php echo $item['reorder_level']; ?></td>
                         <td>
                             <a href="<?php echo SITE_URL; ?>/inventory/view_item/<?php echo $item['id']; ?>" class="action-link">View</a>
+                            <?php if ($auth_service->hasPermission('manage_inventory')): ?>
+                                <a href="<?php echo SITE_URL; ?>/inventory/edit_item/<?php echo $item['id']; ?>" class="action-link">Edit</a>
+                                <a href="<?php echo SITE_URL; ?>/inventory/delete_item/<?php echo $item['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this item?');">Delete</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -49,5 +59,21 @@
         </tbody>
     </table>
 </div>
+
+<style>
+.search-bar {
+    margin: 20px 0;
+}
+.search-bar form {
+    display: flex;
+    gap: 10px;
+}
+.search-bar input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+</style>
 
 <?php require_once '../../includes/views/footer.php'; ?>

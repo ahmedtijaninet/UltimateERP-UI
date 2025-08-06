@@ -149,7 +149,6 @@ CREATE TABLE `customers` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- More tables for Invoices, Sales Orders, Purchase Orders, etc. will be added in later phases.
 -- Enhanced Financial Management (Phase 2)
 CREATE TABLE `invoices` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -262,4 +261,109 @@ CREATE TABLE `inventory_transactions` (
   FOREIGN KEY (`created_by_user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB;
 
--- More tables for other modules will be added in their respective phases.
+-- Human Resources (HR) Module (Phase 5)
+CREATE TABLE `employees` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT UNIQUE,
+  `first_name` VARCHAR(100) NOT NULL,
+  `last_name` VARCHAR(100) NOT NULL,
+  `job_title` VARCHAR(255),
+  `department_id` INT,
+  `hire_date` DATE,
+  `phone_number` VARCHAR(50),
+  `address` TEXT,
+  `date_of_birth` DATE,
+  `salary` DECIMAL(15, 2),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`)
+) ENGINE=InnoDB;
+
+-- Project Management Module (Phase 5)
+CREATE TABLE `projects` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `customer_id` INT,
+  `start_date` DATE,
+  `end_date` DATE,
+  `budget` DECIMAL(15, 2),
+  `status` ENUM('Not Started', 'In Progress', 'Completed', 'On Hold', 'Cancelled') NOT NULL DEFAULT 'Not Started',
+  `manager_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`),
+  FOREIGN KEY (`manager_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+CREATE TABLE `project_tasks` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `project_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `start_date` DATE,
+  `due_date` DATE,
+  `status` ENUM('To Do', 'In Progress', 'Done', 'Blocked') NOT NULL DEFAULT 'To Do',
+  `assignee_id` INT,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`assignee_id`) REFERENCES `users`(`id`)
+) ENGINE=InnoDB;
+
+-- Security (RBAC & Audit)
+CREATE TABLE `role_permissions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `role_id` INT NOT NULL,
+  `permission_key` VARCHAR(100) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `role_permission` (`role_id`, `permission_key`),
+  FOREIGN KEY (`role_id`) REFERENCES `user_roles`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE `audit_log` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT,
+  `action` VARCHAR(255) NOT NULL,
+  `target_type` VARCHAR(100),
+  `target_id` INT,
+  `details` TEXT,
+  `ip_address` VARCHAR(45),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Seed Data
+INSERT INTO `user_roles` (`id`, `role_name`, `description`) VALUES
+(1, 'Admin', 'System Administrator with full access'),
+(2, 'Manager', 'Manager with access to most modules'),
+(3, 'HR', 'Human Resources staff'),
+(4, 'Accountant', 'Finance and accounting staff'),
+(5, 'Employee', 'Regular employee with limited access');
+
+-- Admin Permissions (all)
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(1, 'manage_users'),
+(1, 'manage_all_finances'),
+(1, 'manage_all_inventory'),
+(1, 'manage_all_purchasing'),
+(1, 'manage_all_sales'),
+(1, 'manage_all_hr'),
+(1, 'manage_all_projects');
+
+-- Manager Permissions
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(2, 'view_reports'),
+(2, 'manage_inventory'),
+(2, 'manage_purchasing'),
+(2, 'manage_sales'),
+(2, 'manage_projects');
+
+-- HR Permissions
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(3, 'manage_hr');
+
+-- Accountant Permissions
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(4, 'manage_finances');
