@@ -48,6 +48,32 @@ class ProjectsModel extends BaseModel {
         return $this->db->execute();
     }
 
+    public function updateProject($data) {
+        $this->db->query("
+            UPDATE projects
+            SET name = :name, description = :description, customer_id = :customer_id, start_date = :start_date, end_date = :end_date, budget = :budget, manager_id = :manager_id, status = :status
+            WHERE id = :id
+        ");
+        $this->db->bind(':id', $data['id']);
+        $this->db->bind(':name', $data['name']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':customer_id', $data['customer_id']);
+        $this->db->bind(':start_date', $data['start_date']);
+        $this->db->bind(':end_date', $data['end_date']);
+        $this->db->bind(':budget', $data['budget']);
+        $this->db->bind(':manager_id', $data['manager_id']);
+        $this->db->bind(':status', $data['status']);
+
+        return $this->db->execute();
+    }
+
+    public function deleteProject($id) {
+        // Note: This will also delete all tasks for this project due to the ON DELETE CASCADE constraint.
+        $this->db->query("DELETE FROM projects WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
     // == HELPERS ==
     public function getUsers() {
         $this->db->query("SELECT id, username FROM users WHERE is_active = 1 ORDER BY username ASC");
@@ -83,6 +109,34 @@ class ProjectsModel extends BaseModel {
         $this->db->bind(':due_date', $data['due_date']);
         $this->db->bind(':assignee_id', $data['assignee_id']);
 
+        return $this->db->execute();
+    }
+
+    public function getTaskById($id) {
+        $this->db->query("SELECT * FROM project_tasks WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function updateTask($data) {
+        $this->db->query("
+            UPDATE project_tasks
+            SET title = :title, description = :description, due_date = :due_date, assignee_id = :assignee_id, status = :status
+            WHERE id = :id
+        ");
+        $this->db->bind(':id', $data['id']);
+        $this->db->bind(':title', $data['title']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':due_date', $data['due_date']);
+        $this->db->bind(':assignee_id', $data['assignee_id']);
+        $this->db->bind(':status', $data['status']);
+
+        return $this->db->execute();
+    }
+
+    public function deleteTask($id) {
+        $this->db->query("DELETE FROM project_tasks WHERE id = :id");
+        $this->db->bind(':id', $id);
         return $this->db->execute();
     }
 }

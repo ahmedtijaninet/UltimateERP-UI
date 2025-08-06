@@ -555,6 +555,56 @@ ERP System/
 - **Compliance Issues**: Regular compliance audits and updates
 - **Budget Overruns**: Detailed project planning and monitoring
 
+## 🚀 Getting Started with Docker
+
+This project is configured to run with Docker, which simplifies the setup process by containerizing the application and its database service.
+
+### Prerequisites
+
+- **Docker**: Ensure you have Docker installed on your system. You can download it from the [official Docker website](https://www.docker.com/get-started).
+- **Docker Compose**: This is included with most Docker installations.
+
+### Setup Instructions
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone <repository-url>
+    cd <repository-directory>
+    ```
+
+2.  **Configure Environment Variables**:
+    -   Copy the example environment file:
+        ```bash
+        cp "ERP System/.env.example" "ERP System/.env"
+        ```
+    -   Open `ERP System/.env` and customize the variables, especially the database credentials (`DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`). **Important**: The `DB_HOST` should be set to the service name defined in `docker-compose.yml`, which is `db`.
+
+3.  **Build and Run the Containers**:
+    -   Open a terminal in the project's root directory (where `docker-compose.yml` is located) and run:
+        ```bash
+        docker-compose up --build -d
+        ```
+    -   This command will:
+        -   Build the PHP application image based on the `Dockerfile`.
+        -   Pull the official MySQL 8.0 image.
+        -   Create and start both the application and database containers in detached mode (`-d`).
+
+4.  **Access the Application**:
+    -   The ERP system will be available at `http://localhost:8080` in your web browser.
+
+5.  **Database Setup**:
+    -   The application will automatically attempt to connect to the database. The `schema.sql` is not automatically imported. You can import it manually using a database client or by executing a command:
+        ```bash
+        docker-compose exec db mysql -u<your_db_user> -p<your_db_password> <your_db_name> < "ERP System/database/schema.sql"
+        ```
+
+### Common Docker Commands
+
+-   **Start the services**: `docker-compose up -d`
+-   **Stop the services**: `docker-compose down`
+-   **View logs**: `docker-compose logs -f`
+-   **Access the application container's shell**: `docker-compose exec app bash`
+
 ## 📞 Getting Started
 
 ### Initial Assessment

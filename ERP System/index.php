@@ -1,5 +1,9 @@
 <?php
 
+// Load environment variables
+require_once 'includes/functions.php';
+loadDotEnv(__DIR__ . '/.env');
+
 // Start session
 session_start();
 
@@ -40,7 +44,7 @@ if (empty($route_parts) || (count($route_parts) == 1 && $route_parts[0] == "")) 
 
 $page = !empty($route_parts[0]) ? $route_parts[0] : 'dashboard';
 $action = !empty($route_parts[1]) ? $route_parts[1] : 'index';
-$param = !empty($route_parts[2]) ? $route_parts[2] : null;
+$params = array_slice($route_parts, 2);
 
 // Authentication check
 $auth_service = new AuthService();
@@ -126,12 +130,8 @@ if (file_exists($controller_file)) {
     if (class_exists($controller_name)) {
         $controller = new $controller_name();
         if (method_exists($controller, $method_name)) {
-            // Call method with or without parameter
-            if ($param !== null) {
-                $controller->$method_name($param);
-            } else {
-                $controller->$method_name();
-            }
+            // Call method with parameters
+            call_user_func_array([$controller, $method_name], $params);
         } else {
             header("HTTP/1.0 404 Not Found");
             echo "404 - Action not found: {$method_name}";

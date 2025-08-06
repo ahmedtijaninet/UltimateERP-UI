@@ -1,12 +1,9 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <div class="invoice-box">
         <div class="invoice-header-view">
             <div>
@@ -56,6 +53,14 @@
         </table>
 
         <div class="invoice-actions">
+            <?php if ($auth_service->hasPermission('manage_sales')): ?>
+                <?php if ($so['status'] == 'Draft'): ?>
+                    <a href="<?php echo SITE_URL; ?>/sales/confirm_so/<?php echo $so['id']; ?>" class="btn" onclick="return confirm('Are you sure you want to confirm this sales order?');">Confirm Order</a>
+                <?php endif; ?>
+                <?php if ($so['status'] == 'Confirmed'): ?>
+                    <a href="<?php echo SITE_URL; ?>/sales/ship_order/<?php echo $so['id']; ?>" class="btn" onclick="return confirm('Are you sure you want to mark this order as shipped? This will deduct from inventory.');">Ship Order</a>
+                <?php endif; ?>
+            <?php endif; ?>
             <a href="<?php echo SITE_URL; ?>/sales/sales_orders" class="btn btn-secondary">Back to Sales Orders</a>
         </div>
     </div>

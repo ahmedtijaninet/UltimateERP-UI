@@ -1,4 +1,7 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div class="project-header">
@@ -36,11 +39,12 @@
                             <th>Assignee</th>
                             <th>Due Date</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($tasks)): ?>
-                            <tr><td colspan="4" style="text-align: center;">No tasks found for this project.</td></tr>
+                            <tr><td colspan="5" style="text-align: center;">No tasks found for this project.</td></tr>
                         <?php else: ?>
                             <?php foreach ($tasks as $task): ?>
                             <tr>
@@ -48,12 +52,19 @@
                                 <td><?php echo htmlspecialchars($task['assignee_name']); ?></td>
                                 <td><?php echo $task['due_date'] ? date('M j, Y', strtotime($task['due_date'])) : ''; ?></td>
                                 <td><span class="status-<?php echo strtolower(str_replace(' ', '-', $task['status'])); ?>"><?php echo htmlspecialchars($task['status']); ?></span></td>
+                                <td>
+                                    <?php if ($auth_service->hasPermission('manage_projects')): ?>
+                                        <a href="<?php echo SITE_URL; ?>/projects/edit_task/<?php echo $task['id']; ?>" class="action-link">Edit</a>
+                                        <a href="<?php echo SITE_URL; ?>/projects/delete_task/<?php echo $task['id']; ?>/<?php echo $project['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this task?');">Delete</a>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
+            <?php if ($auth_service->hasPermission('manage_projects')): ?>
             <div class="add-task-form">
                 <h3>Add New Task</h3>
                 <form action="<?php echo SITE_URL; ?>/projects/process_add_task" method="post">
@@ -82,6 +93,7 @@
                     <button type="submit" class="btn">Add Task</button>
                 </form>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 

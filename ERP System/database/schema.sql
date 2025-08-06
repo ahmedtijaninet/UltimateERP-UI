@@ -311,3 +311,59 @@ CREATE TABLE `project_tasks` (
   FOREIGN KEY (`project_id`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`assignee_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB;
+
+-- Security (RBAC & Audit)
+CREATE TABLE `role_permissions` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `role_id` INT NOT NULL,
+  `permission_key` VARCHAR(100) NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `role_permission` (`role_id`, `permission_key`),
+  FOREIGN KEY (`role_id`) REFERENCES `user_roles`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE `audit_log` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT,
+  `action` VARCHAR(255) NOT NULL,
+  `target_type` VARCHAR(100),
+  `target_id` INT,
+  `details` TEXT,
+  `ip_address` VARCHAR(45),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Seed Data
+INSERT INTO `user_roles` (`id`, `role_name`, `description`) VALUES
+(1, 'Admin', 'System Administrator with full access'),
+(2, 'Manager', 'Manager with access to most modules'),
+(3, 'HR', 'Human Resources staff'),
+(4, 'Accountant', 'Finance and accounting staff'),
+(5, 'Employee', 'Regular employee with limited access');
+
+-- Admin Permissions (all)
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(1, 'manage_users'),
+(1, 'manage_all_finances'),
+(1, 'manage_all_inventory'),
+(1, 'manage_all_purchasing'),
+(1, 'manage_all_sales'),
+(1, 'manage_all_hr'),
+(1, 'manage_all_projects');
+
+-- Manager Permissions
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(2, 'view_reports'),
+(2, 'manage_inventory'),
+(2, 'manage_purchasing'),
+(2, 'manage_sales'),
+(2, 'manage_projects');
+
+-- HR Permissions
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(3, 'manage_hr');
+
+-- Accountant Permissions
+INSERT INTO `role_permissions` (`role_id`, `permission_key`) VALUES
+(4, 'manage_finances');

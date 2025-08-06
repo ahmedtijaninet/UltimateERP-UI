@@ -23,13 +23,63 @@ class SalesController {
 
     public function customers() {
         $page_title = 'Customers';
-        $customers = $this->sales_model->getCustomers();
+        $search = isset($_GET['search']) ? trim($_GET['search']) : null;
+        $customers = $this->sales_model->getCustomers($search);
         require_once 'modules/sales/customers_view.php';
     }
 
     public function add_customer() {
         $page_title = 'Add New Customer';
         require_once 'modules/sales/add_customer_view.php';
+    }
+
+    public function edit_customer($id) {
+        $page_title = 'Edit Customer';
+        $customer = $this->sales_model->getCustomerById($id);
+        if (!$customer) {
+            redirect('sales/customers');
+            return;
+        }
+        require_once 'modules/sales/edit_customer_view.php';
+    }
+
+    public function process_update_customer() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id'];
+            $data = [
+                'id' => $id,
+                'name' => trim($_POST['name']),
+                'contact_person' => trim($_POST['contact_person']),
+                'email' => trim($_POST['email']),
+                'phone' => trim($_POST['phone']),
+                'address' => trim($_POST['address'])
+            ];
+
+            if (empty($data['name'])) {
+                setToastMessage('Customer Name is required.', 'error');
+                redirect('sales/edit_customer/' . $id);
+                return;
+            }
+
+            if ($this->sales_model->updateCustomer($data)) {
+                setToastMessage('Customer updated successfully.', 'success');
+                redirect('sales/customers');
+            } else {
+                setToastMessage('Failed to update customer.', 'error');
+                redirect('sales/edit_customer/' . $id);
+            }
+        } else {
+            redirect('sales/customers');
+        }
+    }
+
+    public function delete_customer($id) {
+        if ($this->sales_model->deleteCustomer($id)) {
+            setToastMessage('Customer deleted successfully.', 'success');
+        } else {
+            setToastMessage('Failed to delete customer. It may be in use.', 'error');
+        }
+        redirect('sales/customers');
     }
 
     public function process_add_customer() {
@@ -43,16 +93,16 @@ class SalesController {
             ];
 
             if (empty($data['name'])) {
-                $_SESSION['error_message'] = 'Customer Name is required.';
+                setToastMessage('Customer Name is required.', 'error');
                 redirect('sales/add_customer');
                 return;
             }
 
             if ($this->sales_model->addCustomer($data)) {
-                $_SESSION['success_message'] = 'Customer added successfully.';
+                setToastMessage('Customer added successfully.', 'success');
                 redirect('sales/customers');
             } else {
-                $_SESSION['error_message'] = 'Failed to add customer.';
+                setToastMessage('Failed to add customer.', 'error');
                 redirect('sales/add_customer');
             }
         } else {
@@ -101,17 +151,17 @@ class SalesController {
             }
 
             if (empty($data['customer_id']) || empty($data['items'])) {
-                $_SESSION['error_message'] = 'Customer and at least one item are required.';
+                setToastMessage('Customer and at least one item are required.', 'error');
                 redirect('sales/create_so');
                 return;
             }
 
             $so_id = $this->sales_model->createSalesOrder($data);
             if ($so_id) {
-                $_SESSION['success_message'] = 'Sales Order created successfully.';
+                setToastMessage('Sales Order created successfully.', 'success');
                 redirect('sales/view_so/' . $so_id);
             } else {
-                $_SESSION['error_message'] = 'Failed to create Sales Order.';
+                setToastMessage('Failed to create Sales Order.', 'error');
                 redirect('sales/create_so');
             }
         } else {
@@ -127,5 +177,35 @@ class SalesController {
             return;
         }
         require_once 'modules/sales/view_so_view.php';
+    }
+
+    public function cancel_so($id) {
+        if ($this->sales_model->cancelSalesOrder($id)) {
+            setToastMessage('Sales Order cancelled successfully.', 'success');
+        } else {
+            setToastMessage('Failed to cancel Sales Order. It may have already been shipped or cancelled.', 'error');
+        }
+        redirect('sales/sales_orders');
+    }
+
+    public function confirm_so($id) {
+        // In a real app, you'd check for stock availability here first
+        $this->sales_model->db->query("UPDATE sales_orders SET status = 'Confirmed' WHERE id = :id AND status = 'Draft'");
+        $this->sales_model->db->bind(':id', $id);
+        if ($this->sales_model->db->execute()) {
+            setToastMessage('Sales Order confirmed.', 'success');
+        } else {
+            setToastMessage('Failed to confirm Sales Order.', 'error');
+        }
+        redirect('sales/view_so/' . $id);
+    }
+
+    public function ship_order($id) {
+        if ($this->sales_model->shipSalesOrder($id)) {
+            setToastMessage('Sales Order marked as shipped and inventory updated.', 'success');
+        } else {
+            setToastMessage('Failed to ship order. It may not be in a "Confirmed" state.', 'error');
+        }
+        redirect('sales/view_so/' . $id);
     }
 }

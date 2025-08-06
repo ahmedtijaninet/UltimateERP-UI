@@ -33,6 +33,60 @@ class HRController {
         require_once 'modules/hr/add_employee_view.php';
     }
 
+    public function edit_employee($id) {
+        $page_title = 'Edit Employee';
+        $employee = $this->hr_model->getEmployeeById($id);
+        if (!$employee) {
+            redirect('hr/employees');
+            return;
+        }
+        $departments = $this->hr_model->getDepartments();
+        require_once 'modules/hr/edit_employee_view.php';
+    }
+
+    public function process_update_employee() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id'];
+            $data = [
+                'id' => $id,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'job_title' => trim($_POST['job_title']),
+                'department_id' => !empty($_POST['department_id']) ? $_POST['department_id'] : null,
+                'hire_date' => !empty($_POST['hire_date']) ? $_POST['hire_date'] : null,
+                'phone_number' => trim($_POST['phone_number']),
+                'address' => trim($_POST['address']),
+                'date_of_birth' => !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null,
+                'salary' => !empty($_POST['salary']) ? $_POST['salary'] : null
+            ];
+
+            if (empty($data['first_name']) || empty($data['last_name'])) {
+                setToastMessage('First Name and Last Name are required.', 'error');
+                redirect('hr/edit_employee/' . $id);
+                return;
+            }
+
+            if ($this->hr_model->updateEmployee($data)) {
+                setToastMessage('Employee updated successfully.', 'success');
+                redirect('hr/employees');
+            } else {
+                setToastMessage('Failed to update employee.', 'error');
+                redirect('hr/edit_employee/' . $id);
+            }
+        } else {
+            redirect('hr/employees');
+        }
+    }
+
+    public function delete_employee($id) {
+        if ($this->hr_model->deleteEmployee($id)) {
+            setToastMessage('Employee deleted successfully.', 'success');
+        } else {
+            setToastMessage('Failed to delete employee.', 'error');
+        }
+        redirect('hr/employees');
+    }
+
     public function process_add_employee() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -48,16 +102,16 @@ class HRController {
             ];
 
             if (empty($data['first_name']) || empty($data['last_name'])) {
-                $_SESSION['error_message'] = 'First Name and Last Name are required.';
+                setToastMessage('First Name and Last Name are required.', 'error');
                 redirect('hr/add_employee');
                 return;
             }
 
             if ($this->hr_model->addEmployee($data)) {
-                $_SESSION['success_message'] = 'Employee added successfully.';
+                setToastMessage('Employee added successfully.', 'success');
                 redirect('hr/employees');
             } else {
-                $_SESSION['error_message'] = 'Failed to add employee.';
+                setToastMessage('Failed to add employee.', 'error');
                 redirect('hr/add_employee');
             }
         } else {

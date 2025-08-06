@@ -1,16 +1,15 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Projects</h1>
-        <a href="<?php echo SITE_URL; ?>/projects/add_project" class="btn" style="max-width: 200px;">Add New Project</a>
+        <?php if ($auth_service->hasPermission('manage_projects')): ?>
+            <a href="<?php echo SITE_URL; ?>/projects/add_project" class="btn" style="max-width: 200px;">Add New Project</a>
+        <?php endif; ?>
     </div>
-
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
 
     <table class="table">
         <thead>
@@ -40,6 +39,10 @@
                         <td><span class="status-<?php echo strtolower(str_replace(' ', '-', $project['status'])); ?>"><?php echo htmlspecialchars($project['status']); ?></span></td>
                         <td>
                             <a href="<?php echo SITE_URL; ?>/projects/view_project/<?php echo $project['id']; ?>" class="action-link">View</a>
+                            <?php if ($auth_service->hasPermission('manage_projects')): ?>
+                                <a href="<?php echo SITE_URL; ?>/projects/edit_project/<?php echo $project['id']; ?>" class="action-link">Edit</a>
+                                <a href="<?php echo SITE_URL; ?>/projects/delete_project/<?php echo $project['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this project and all its tasks?');">Delete</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -34,6 +34,60 @@ class ProjectsController {
         require_once 'modules/projects/add_project_view.php';
     }
 
+    public function edit_project($id) {
+        $page_title = 'Edit Project';
+        $project = $this->projects_model->getProjectById($id);
+        if (!$project) {
+            redirect('projects/projects');
+            return;
+        }
+        $customers = $this->projects_model->getCustomers();
+        $users = $this->projects_model->getUsers();
+        require_once 'modules/projects/edit_project_view.php';
+    }
+
+    public function process_update_project() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id'];
+            $data = [
+                'id' => $id,
+                'name' => trim($_POST['name']),
+                'description' => trim($_POST['description']),
+                'customer_id' => !empty($_POST['customer_id']) ? $_POST['customer_id'] : null,
+                'manager_id' => !empty($_POST['manager_id']) ? $_POST['manager_id'] : null,
+                'start_date' => !empty($_POST['start_date']) ? $_POST['start_date'] : null,
+                'end_date' => !empty($_POST['end_date']) ? $_POST['end_date'] : null,
+                'budget' => !empty($_POST['budget']) ? $_POST['budget'] : null,
+                'status' => $_POST['status']
+            ];
+
+            if (empty($data['name'])) {
+                setToastMessage('Project Name is required.', 'error');
+                redirect('projects/edit_project/' . $id);
+                return;
+            }
+
+            if ($this->projects_model->updateProject($data)) {
+                setToastMessage('Project updated successfully.', 'success');
+                redirect('projects/projects');
+            } else {
+                setToastMessage('Failed to update project.', 'error');
+                redirect('projects/edit_project/' . $id);
+            }
+        } else {
+            redirect('projects/projects');
+        }
+    }
+
+    public function delete_project($id) {
+        if ($this->projects_model->deleteProject($id)) {
+            setToastMessage('Project deleted successfully.', 'success');
+        } else {
+            setToastMessage('Failed to delete project.', 'error');
+        }
+        redirect('projects/projects');
+    }
+
     public function process_add_project() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
@@ -47,16 +101,16 @@ class ProjectsController {
             ];
 
             if (empty($data['name'])) {
-                $_SESSION['error_message'] = 'Project Name is required.';
+                setToastMessage('Project Name is required.', 'error');
                 redirect('projects/add_project');
                 return;
             }
 
             if ($this->projects_model->addProject($data)) {
-                $_SESSION['success_message'] = 'Project added successfully.';
+                setToastMessage('Project added successfully.', 'success');
                 redirect('projects/projects');
             } else {
-                $_SESSION['error_message'] = 'Failed to add project.';
+                setToastMessage('Failed to add project.', 'error');
                 redirect('projects/add_project');
             }
         } else {
@@ -78,6 +132,56 @@ class ProjectsController {
 
     // == TASK METHODS ==
 
+    public function edit_task($id) {
+        $page_title = 'Edit Task';
+        $task = $this->projects_model->getTaskById($id);
+        if (!$task) {
+            redirect('projects/projects'); // Or redirect to project view if possible
+            return;
+        }
+        $users = $this->projects_model->getUsers();
+        require_once 'modules/projects/edit_task_view.php';
+    }
+
+    public function process_update_task() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id'];
+            $project_id = $_POST['project_id'];
+            $data = [
+                'id' => $id,
+                'title' => trim($_POST['title']),
+                'description' => trim($_POST['description']),
+                'due_date' => !empty($_POST['due_date']) ? $_POST['due_date'] : null,
+                'assignee_id' => !empty($_POST['assignee_id']) ? $_POST['assignee_id'] : null,
+                'status' => $_POST['status']
+            ];
+
+            if (empty($data['title'])) {
+                setToastMessage('Task Title is required.', 'error');
+                redirect('projects/edit_task/' . $id);
+                return;
+            }
+
+            if ($this->projects_model->updateTask($data)) {
+                setToastMessage('Task updated successfully.', 'success');
+            } else {
+                setToastMessage('Failed to update task.', 'error');
+            }
+            redirect('projects/view_project/' . $project_id);
+        } else {
+            redirect('projects/projects');
+        }
+    }
+
+    public function delete_task($id, $project_id) {
+        if ($this->projects_model->deleteTask($id)) {
+            setToastMessage('Task deleted successfully.', 'success');
+        } else {
+            setToastMessage('Failed to delete task.', 'error');
+        }
+        redirect('projects/view_project/' . $project_id);
+    }
+
     public function process_add_task() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $project_id = $_POST['project_id'];
@@ -90,15 +194,15 @@ class ProjectsController {
             ];
 
             if (empty($data['title'])) {
-                $_SESSION['error_message'] = 'Task Title is required.';
+                setToastMessage('Task Title is required.', 'error');
                 redirect('projects/view_project/' . $project_id);
                 return;
             }
 
             if ($this->projects_model->addTask($data)) {
-                $_SESSION['success_message'] = 'Task added successfully.';
+                setToastMessage('Task added successfully.', 'success');
             } else {
-                $_SESSION['error_message'] = 'Failed to add task.';
+                setToastMessage('Failed to add task.', 'error');
             }
             redirect('projects/view_project/' . $project_id);
         } else {

@@ -9,14 +9,24 @@ class InventoryModel extends BaseModel {
     }
 
     // == ITEM METHODS ==
-    public function getItems() {
-        $this->db->query("
+    public function getItems($search = null) {
+        $sql = "
             SELECT i.*, c.name as category_name, s.name as supplier_name
             FROM inventory_items i
             LEFT JOIN item_categories c ON i.category_id = c.id
             LEFT JOIN suppliers s ON i.supplier_id = s.id
-            ORDER BY i.item_code ASC
-        ");
+        ";
+        if ($search) {
+            $sql .= " WHERE i.item_code LIKE :search OR i.description LIKE :search";
+        }
+        $sql .= " ORDER BY i.item_code ASC";
+
+        $this->db->query($sql);
+
+        if ($search) {
+            $this->db->bind(':search', '%' . $search . '%');
+        }
+
         return $this->db->resultSet();
     }
 
@@ -39,6 +49,29 @@ class InventoryModel extends BaseModel {
         $this->db->bind(':reorder_level', $data['reorder_level']);
         $this->db->bind(':supplier_id', $data['supplier_id']);
 
+        return $this->db->execute();
+    }
+
+    public function updateItem($data) {
+        $this->db->query("
+            UPDATE inventory_items
+            SET item_code = :item_code, description = :description, category_id = :category_id, unit_price = :unit_price, reorder_level = :reorder_level, supplier_id = :supplier_id
+            WHERE id = :id
+        ");
+        $this->db->bind(':id', $data['id']);
+        $this->db->bind(':item_code', $data['item_code']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':category_id', $data['category_id']);
+        $this->db->bind(':unit_price', $data['unit_price']);
+        $this->db->bind(':reorder_level', $data['reorder_level']);
+        $this->db->bind(':supplier_id', $data['supplier_id']);
+
+        return $this->db->execute();
+    }
+
+    public function deleteItem($id) {
+        $this->db->query("DELETE FROM inventory_items WHERE id = :id");
+        $this->db->bind(':id', $id);
         return $this->db->execute();
     }
 
@@ -131,7 +164,7 @@ class InventoryModel extends BaseModel {
         return $this->db->resultSet();
     }
 
-    public function adjustStock($data) {
+    public function adjustStock($item_id, $quantity_change, $type, $notes = '', $related_document_id = null) {
         // This should be a transaction
         // 1. Update the item's quantity
         $this->db->query("
@@ -139,8 +172,8 @@ class InventoryModel extends BaseModel {
             SET quantity_on_hand = quantity_on_hand + :quantity_change
             WHERE id = :item_id
         ");
-        $this->db->bind(':quantity_change', $data['quantity_change']);
-        $this->db->bind(':item_id', $data['item_id']);
+        $this->db->bind(':quantity_change', $quantity_change);
+        $this->db->bind(':item_id', $item_id);
 
         if (!$this->db->execute()) {
             return false;
@@ -148,13 +181,14 @@ class InventoryModel extends BaseModel {
 
         // 2. Log the transaction
         $this->db->query("
-            INSERT INTO inventory_transactions (item_id, transaction_type, quantity_change, notes, created_by_user_id)
-            VALUES (:item_id, :transaction_type, :quantity_change, :notes, :created_by_user_id)
+            INSERT INTO inventory_transactions (item_id, transaction_type, quantity_change, related_document_id, notes, created_by_user_id)
+            VALUES (:item_id, :transaction_type, :quantity_change, :related_document_id, :notes, :created_by_user_id)
         ");
-        $this->db->bind(':item_id', $data['item_id']);
-        $this->db->bind(':transaction_type', 'Adjustment');
-        $this->db->bind(':quantity_change', $data['quantity_change']);
-        $this->db->bind(':notes', $data['notes']);
+        $this->db->bind(':item_id', $item_id);
+        $this->db->bind(':transaction_type', $type);
+        $this->db->bind(':quantity_change', $quantity_change);
+        $this->db->bind(':related_document_id', $related_document_id);
+        $this->db->bind(':notes', $notes);
         $this->db->bind(':created_by_user_id', $_SESSION['user_id']);
 
         return $this->db->execute();

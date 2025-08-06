@@ -1,16 +1,15 @@
-<?php require_once '../../includes/views/header.php'; ?>
+<?php
+require_once '../../includes/views/header.php';
+$auth_service = new AuthService();
+?>
 
 <div class="container">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Employees</h1>
-        <a href="<?php echo SITE_URL; ?>/hr/add_employee" class="btn" style="max-width: 200px;">Add New Employee</a>
+        <?php if ($auth_service->hasPermission('manage_hr')): ?>
+            <a href="<?php echo SITE_URL; ?>/hr/add_employee" class="btn" style="max-width: 200px;">Add New Employee</a>
+        <?php endif; ?>
     </div>
-
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
 
     <table class="table">
         <thead>
@@ -20,12 +19,13 @@
                 <th>Department</th>
                 <th>Hire Date</th>
                 <th>Username</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($employees)): ?>
                 <tr>
-                    <td colspan="5" style="text-align: center;">No employees found.</td>
+                    <td colspan="6" style="text-align: center;">No employees found.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($employees as $employee): ?>
@@ -35,6 +35,12 @@
                         <td><?php echo htmlspecialchars($employee['department_name']); ?></td>
                         <td><?php echo $employee['hire_date'] ? date('M j, Y', strtotime($employee['hire_date'])) : ''; ?></td>
                         <td><?php echo htmlspecialchars($employee['username']); ?></td>
+                        <td>
+                            <?php if ($auth_service->hasPermission('manage_hr')): ?>
+                                <a href="<?php echo SITE_URL; ?>/hr/edit_employee/<?php echo $employee['id']; ?>" class="action-link">Edit</a>
+                                <a href="<?php echo SITE_URL; ?>/hr/delete_employee/<?php echo $employee['id']; ?>" class="action-link" onclick="return confirm('Are you sure you want to delete this employee record?');">Delete</a>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

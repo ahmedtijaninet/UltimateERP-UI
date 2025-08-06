@@ -2,10 +2,15 @@
 
 require_once 'includes/BaseModel.php';
 
+require_once 'modules/inventory/models/InventoryModel.php';
+
 class PurchasingModel extends BaseModel {
+
+    private $inventory_model;
 
     public function __construct() {
         parent::__construct();
+        $this->inventory_model = new InventoryModel();
     }
 
     // == PURCHASE ORDER METHODS ==
@@ -36,6 +41,28 @@ class PurchasingModel extends BaseModel {
         }
 
         return $po;
+    }
+
+    public function cancelPurchaseOrder($id) {
+        $this->db->query("UPDATE purchase_orders SET status = 'Cancelled' WHERE id = :id AND status NOT IN ('Fully Received', 'Cancelled')");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function receivePurchaseOrder($id) {
+        $po = $this->getPurchaseOrderById($id);
+        if (!$po || $po['status'] != 'Ordered') {
+            return false;
+        }
+
+        // This should be a transaction
+        foreach ($po['items'] as $item) {
+            $this->inventory_model->adjustStock($item['item_id'], $item['quantity'], 'Purchase', 'PO: ' . $po['po_number'], $id);
+        }
+
+        $this->db->query("UPDATE purchase_orders SET status = 'Fully Received' WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
     }
 
     public function createPurchaseOrder($data) {

@@ -15,6 +15,12 @@ class FinanceModel extends BaseModel {
         return $this->db->resultSet();
     }
 
+    public function getAccountById($id) {
+        $this->db->query("SELECT * FROM accounts WHERE id = :id");
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
     public function addAccount($data) {
         $this->db->query("INSERT INTO accounts (account_code, account_name, account_type, description) VALUES (:account_code, :account_name, :account_type, :description)");
         $this->db->bind(':account_code', $data['account_code']);
@@ -22,6 +28,23 @@ class FinanceModel extends BaseModel {
         $this->db->bind(':account_type', $data['account_type']);
         $this->db->bind(':description', $data['description']);
 
+        return $this->db->execute();
+    }
+
+    public function updateAccount($data) {
+        $this->db->query("UPDATE accounts SET account_code = :account_code, account_name = :account_name, account_type = :account_type, description = :description WHERE id = :id");
+        $this->db->bind(':id', $data['id']);
+        $this->db->bind(':account_code', $data['account_code']);
+        $this->db->bind(':account_name', $data['account_name']);
+        $this->db->bind(':account_type', $data['account_type']);
+        $this->db->bind(':description', $data['description']);
+        return $this->db->execute();
+    }
+
+    public function deleteAccount($id) {
+        // Note: You might want to prevent deletion if the account has transactions.
+        $this->db->query("DELETE FROM accounts WHERE id = :id");
+        $this->db->bind(':id', $id);
         return $this->db->execute();
     }
 
@@ -54,6 +77,12 @@ class FinanceModel extends BaseModel {
         }
 
         return $invoice;
+    }
+
+    public function cancelInvoice($id) {
+        $this->db->query("UPDATE invoices SET status = 'Cancelled' WHERE id = :id AND status != 'Paid'");
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
     }
 
     public function createInvoice($data) {

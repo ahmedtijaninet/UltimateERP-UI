@@ -3,12 +3,6 @@
 <div class="container">
     <h2>Create New Invoice</h2>
 
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger">
-            <p><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <form action="<?php echo SITE_URL; ?>/finance/process_create_invoice" method="post" id="invoice-form">
         <div class="invoice-header">
             <div class="form-group">

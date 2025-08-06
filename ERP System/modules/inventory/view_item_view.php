@@ -7,17 +7,6 @@
         <h2>Current Stock: <?php echo $item['quantity_on_hand']; ?></h2>
     </div>
 
-    <?php if (isset($_SESSION['success_message'])): ?>
-        <div class="alert alert-success">
-            <p><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
-        </div>
-    <?php endif; ?>
-     <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger">
-            <p><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <div class="stock-management-section">
         <div class="stock-adjustment-container">
             <h3>Adjust Stock</h3>

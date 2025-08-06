@@ -3,12 +3,6 @@
 <div class="form-container">
     <h2>Add a New Project</h2>
 
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger">
-            <p><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <form action="<?php echo SITE_URL; ?>/projects/process_add_project" method="post">
         <div class="form-group">
             <label for="name">Project Name</label>

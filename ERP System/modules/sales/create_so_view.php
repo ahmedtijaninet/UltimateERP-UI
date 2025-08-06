@@ -3,12 +3,6 @@
 <div class="container">
     <h2>Create New Sales Order</h2>
 
-    <?php if (isset($_SESSION['error_message'])): ?>
-        <div class="alert alert-danger">
-            <p><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
-        </div>
-    <?php endif; ?>
-
     <form action="<?php echo SITE_URL; ?>/sales/process_create_so" method="post" id="so-form">
         <div class="so-header">
             <div class="form-group">
